@@ -2,6 +2,7 @@ setwd("~/Desktop/newspapers_broadband")
 
 library(tidyverse)
 library(haven)
+library(plm)
 
 # Loading and cleaning datasets
 #Dataset 1: Newspaper circulation
@@ -29,32 +30,13 @@ pop <- read_dta("white_pop.dta") %>%
 np_data <- np_data %>%
   inner_join(row, by = "staten") %>%
   inner_join(pop, by = c("fips", "year")) %>%
-  filter(no_states > 1, no_states <= 5)
+  filter(no_states > 1, no_states <= 5) %>%
+  mutate(circ = log(2*daily/voting_pop_)) %>%
+  filter(circ > -10000000)
 
-#skal med sjasann
+summary(plm(circ ~ factor(year) + total + white_pop + black_pop + hisp_pop + total*factor(year), data = np_data, model = "within", index = c("np")))
 
-
-
-
-
-
-
-  # drop_na(voting_age_pop_)
-
-
-  # np_data <- mutate(np_data, circ = daily / voting_age_pop_)
-
-
-summary(plm(circ ~ factor(year) + total + total*factor(year), data = np_data, model = "within", index = c("np")))
-
-
-
-np_data %>%
-  filter(daily>0)
-
-
-
-#Do the variables uniquely identify?
+#Do the variables uniquely identify observations?
 pop %>%
   group_by(var) %>%
   summarise(count = n()) %>%
